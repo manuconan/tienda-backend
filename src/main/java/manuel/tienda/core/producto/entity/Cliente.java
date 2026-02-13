@@ -7,7 +7,6 @@ import lombok.*;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-@Data
 @Setter
 public class Cliente {
     private String username;
