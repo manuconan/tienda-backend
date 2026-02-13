@@ -1,0 +1,16 @@
+package manuel.tienda.core.auth.dto;
+
+
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+@AllArgsConstructor
+@Setter
+@Getter
+@NoArgsConstructor
+public class UsuarioResponse {
+    private Long id;
+    private String username;
+}
