@@ -3,6 +3,8 @@ package manuel.tienda.core.producto.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.math.BigDecimal;
+
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter
@@ -17,8 +19,9 @@ public class Producto {
     @Column(nullable = false)
     private String nombre;
 
-    @Column(nullable = false)
-    private Double precio;
+    @Column(nullable = false, precision = 10, scale = 2)
+    private BigDecimal precio;
+
 
     @Column(nullable = false)
     private Integer stock;

@@ -10,6 +10,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.math.BigDecimal;
+
 /* Esto es lo que el cliente envía */
 @AllArgsConstructor
 @NoArgsConstructor
@@ -21,7 +23,8 @@ public class ProductoRequest {
 
     @NotNull
     @Positive
-    private Double precio;
+    private BigDecimal precio;
+
 
     @NotNull
     @Min(0)

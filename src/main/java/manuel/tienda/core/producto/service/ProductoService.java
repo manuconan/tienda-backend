@@ -54,6 +54,7 @@ public class ProductoService {
      */
     @Transactional(readOnly = true)
     public Producto findById(Long id) {
+
         return obtenerProducto(id);
     }
 
@@ -66,7 +67,7 @@ public class ProductoService {
     }
 
     /**
-     * Método reutilizable para obtener producto o lanzar excepción.
+     * Metodo reutilizable para obtener producto o lanzar excepción.
      */
     private Producto obtenerProducto(Long id) {
         if (id == null) {
