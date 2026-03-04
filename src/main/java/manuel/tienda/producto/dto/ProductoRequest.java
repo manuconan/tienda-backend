@@ -1,4 +1,4 @@
-package manuel.tienda.core.producto.dto;
+package manuel.tienda.producto.dto;
 
 
 import jakarta.validation.constraints.Min;
@@ -9,6 +9,8 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+
+import java.math.BigDecimal;
 
 /* Esto es lo que el cliente envía */
 @AllArgsConstructor
@@ -21,7 +23,8 @@ public class ProductoRequest {
 
     @NotNull
     @Positive
-    private Double precio;
+    private BigDecimal precio;
+
 
     @NotNull
     @Min(0)

@@ -1,11 +1,12 @@
-package manuel.tienda.core.producto.service;
+package manuel.tienda.producto.service;
 
-import manuel.tienda.core.producto.entity.Producto;
-import manuel.tienda.core.exception.ProductoInvalidoException;
-import manuel.tienda.core.exception.ProductoNoEncontradoException;
-import manuel.tienda.core.producto.repository.ProductoRepository;
+import manuel.tienda.producto.entity.Producto;
+import manuel.tienda.exception.ProductoInvalidoException;
+import manuel.tienda.exception.ProductoNoEncontradoException;
+import manuel.tienda.producto.repository.ProductoRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import java.math.BigDecimal;
 
 import java.util.List;
 
@@ -54,6 +55,7 @@ public class ProductoService {
      */
     @Transactional(readOnly = true)
     public Producto findById(Long id) {
+
         return obtenerProducto(id);
     }
 
@@ -66,7 +68,7 @@ public class ProductoService {
     }
 
     /**
-     * Método reutilizable para obtener producto o lanzar excepción.
+     * Metodo reutilizable para obtener producto o lanzar excepción.
      */
     private Producto obtenerProducto(Long id) {
         if (id == null) {
@@ -90,7 +92,7 @@ public class ProductoService {
             throw new ProductoInvalidoException("El nombre no puede estar vacío");
         }
 
-        if (producto.getPrecio() == null || producto.getPrecio() <= 0) {
+        if (producto.getPrecio() == null || producto.getPrecio().compareTo(BigDecimal.ZERO)<=0) {
             throw new ProductoInvalidoException("El precio debe ser mayor que cero");
         }
 

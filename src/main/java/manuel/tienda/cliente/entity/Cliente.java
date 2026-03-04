@@ -1,4 +1,4 @@
-package manuel.tienda.core.cliente.entity;
+package manuel.tienda.cliente.entity;
 
 
 import jakarta.persistence.*;
@@ -29,5 +29,17 @@ public class Cliente {
         }
         this.username = username;
         this.passwordHash = passwordHash;
+    }
+
+    public void updateUsername(String username) {
+        if (username != null || !username.isEmpty() || !username.isBlank()) {
+            this.username = username;
+        }
+    }
+
+    public void updatePasswordHash(String passwordHash) {
+        if (passwordHash != null || !passwordHash.isEmpty() || !passwordHash.isEmpty()) {
+            this.passwordHash = passwordHash;
+        }
     }
 }

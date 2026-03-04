@@ -3,15 +3,17 @@ package manuel.tienda.core.producto.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
-import java.math.BigDecimal;
-
+/* Esto es lo que el cliente recibe despues de hacer la petición */
+@Setter
 @Getter
 @AllArgsConstructor
+@NoArgsConstructor
 public class ProductoResponse {
-
-    private final Long id;
-    private final String nombre;
-    private final BigDecimal precio;
-    private final Integer stock;
+    public Long id;
+    public String nombre;
+    public Double precio;
+    public Integer stock;
 }

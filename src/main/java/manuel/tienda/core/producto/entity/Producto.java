@@ -1,29 +1,22 @@
 package manuel.tienda.core.producto.entity;
 
-import jakarta.persistence.*;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
 import lombok.*;
-
-import java.math.BigDecimal;
 
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter
 @Setter
 @Entity
-@Table(name = "productos")
 public class Producto {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
-    @Column(nullable = false)
     private String nombre;
-
-    @Column(nullable = false, precision = 10, scale = 2)
-    private BigDecimal precio;
-
-
-    @Column(nullable = false)
+    private Double precio;
     private Integer stock;
 
 }

@@ -16,12 +16,11 @@ public class ProductoMapper {
     }
 
     public static ProductoResponse toResponse(Producto producto) {
-        ProductoResponse response=new ProductoResponse(
-                producto.getId(),
-                producto.getNombre(),
-                producto.getPrecio(),
-                producto.getStock()
-        );
-        return response ;
+        ProductoResponse response = new ProductoResponse();
+        response.setId(producto.getId());
+        response.setNombre(producto.getNombre());
+        response.setPrecio(producto.getPrecio());
+        response.setStock(producto.getStock());
+        return response;
     }
 }

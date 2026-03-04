@@ -1,4 +1,4 @@
-package manuel.tienda.core.cliente.dto;
+package manuel.tienda.cliente.dto;
 
 
 import jakarta.validation.constraints.NotBlank;
