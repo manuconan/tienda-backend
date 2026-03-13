@@ -1,11 +1,10 @@
 package manuel.tienda.core.cliente.service;
 
 
-
 import manuel.tienda.cliente.dto.ClienteRequest;
+import manuel.tienda.cliente.entity.Cliente;
 import manuel.tienda.cliente.repository.ClienteRepository;
 import manuel.tienda.cliente.service.ClienteService;
-import manuel.tienda.core.cliente.Cliente;
 import manuel.tienda.exception.ClienteNoEncontradoException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -13,6 +12,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.Optional;
 
@@ -25,6 +25,9 @@ class ClienteServiceTest {
     @Mock
     private ClienteRepository clienteRepository;
 
+    @Mock
+    private PasswordEncoder passwordEncoder;
+
     @InjectMocks
     private ClienteService clienteService;
 
@@ -36,13 +39,14 @@ class ClienteServiceTest {
 
         Long id = 1L;
 
+        ClienteRequest request = new ClienteRequest();
+        request.setUsername("nuevoUsername");
+        request.setPassword("password123");
+
         when(clienteRepository.findById(id))
                 .thenReturn(Optional.empty());
 
-        assertThrows(
-                ClienteNoEncontradoException.class,
-                () -> clienteService.update(id, new ClienteRequest("nuevoUsername"))
-        );
+        assertThrows(ClienteNoEncontradoException.class, () -> clienteService.update(id, request));
 
         verify(clienteRepository).findById(id);
     }
@@ -55,16 +59,22 @@ class ClienteServiceTest {
 
         Long id = 1L;
 
-        Cliente cliente = new Cliente();
-        cliente.setUsername("viejoUsername");
 
-        ClienteRequest request = new ClienteRequest("nuevoUsername");
+        Cliente cliente = new Cliente("viejoUsermane", "passwordHash");
+
+
+        ClienteRequest request = new ClienteRequest();
+        request.setUsername("nuevoUsername");
+        request.setPassword("password123");
 
         when(clienteRepository.findById(id))
                 .thenReturn(Optional.of(cliente));
 
         when(clienteRepository.existsByUsername("nuevoUsername"))
                 .thenReturn(false);
+
+        when(passwordEncoder.encode("password123"))
+                .thenReturn("encoderPassword");
 
         when(clienteRepository.save(cliente))
                 .thenReturn(cliente);

@@ -1,14 +1,17 @@
 package manuel.tienda.core;
 
-import manuel.tienda.core.producto.entity.Producto;
-import manuel.tienda.core.exception.ProductoInvalidoException;
-import manuel.tienda.core.exception.ProductoNoEncontradoException;
-import manuel.tienda.core.producto.service.ProductoService;
+
+import manuel.tienda.exception.ProductoInvalidoException;
+import manuel.tienda.exception.ProductoNoEncontradoException;
+import manuel.tienda.producto.entity.Producto;
+import manuel.tienda.producto.service.ProductoService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.math.BigDecimal;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -30,7 +33,7 @@ class ProductoServiceTest {
     private Producto crearProductoValido() {
         Producto producto = new Producto();
         producto.setNombre("Producto Test");
-        producto.setPrecio(10.0);
+        producto.setPrecio(new BigDecimal(10));
         producto.setStock(5);
         return producto;
     }
@@ -68,7 +71,7 @@ class ProductoServiceTest {
 
         Producto nuevo = new Producto();
         nuevo.setNombre("Actualizado");
-        nuevo.setPrecio(20.0);
+        nuevo.setPrecio(new BigDecimal(20));
         nuevo.setStock(10);
 
         Producto actualizado = productoService.update(guardado.getId(), nuevo);
