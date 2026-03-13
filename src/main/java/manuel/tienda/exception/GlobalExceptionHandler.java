@@ -1,3 +1,4 @@
+// src/main/java/manuel/tienda/exception/GlobalExceptionHandler.java
 package manuel.tienda.exception;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -7,9 +8,28 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+/**
+ * Maneja de forma centralizada todas las excepciones lanzadas por la aplicación.
+ *
+ * Objetivos:
+ * - Evitar duplicación de código en controladores.
+ * - Garantizar un formato de error consistente (ApiError).
+ * - Mapear excepciones de dominio a códigos HTTP apropiados.
+ */
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
+    /**
+     * Fábrica central de respuestas de error.
+     *
+     * Centralizar la creación de ApiError evita inconsistencias si el formato
+     * de error cambia en el futuro (p.ej., añadir errorCode o detalles).
+     *
+     * @param ex      excepción capturada
+     * @param status  estado HTTP que se devolverá al cliente
+     * @param request request HTTP original para obtener el endpoint
+     * @return ResponseEntity con el ApiError serializado a JSON
+     */
     private ResponseEntity<ApiError> buildError(
             Exception ex,
             HttpStatus status,
@@ -25,22 +45,29 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(status).body(error);
     }
 
-    @ExceptionHandler(ProductoNoEncontradoException.class)
-    public ResponseEntity<ApiError> handleProductoNoEncontrado(
-            ProductoNoEncontradoException ex,
+    /**
+     * Maneja recursos que no existen.
+     *
+     * Agrupar excepciones con la misma semántica HTTP (404) reduce
+     * duplicación y facilita mantener el handler cuando el proyecto crece.
+     */
+    @ExceptionHandler({
+            ProductoNoEncontradoException.class,
+            ClienteNoEncontradoException.class
+    })
+    public ResponseEntity<ApiError> handleNotFound(
+            RuntimeException ex,
             HttpServletRequest request) {
 
         return buildError(ex, HttpStatus.NOT_FOUND, request);
     }
 
-    @ExceptionHandler(ClienteNoEncontradoException.class)
-    public ResponseEntity<ApiError> handleUsuarioNoEncontrado(
-            ClienteNoEncontradoException ex,
-            HttpServletRequest request) {
-
-        return buildError(ex, HttpStatus.NOT_FOUND, request);
-    }
-
+    /**
+     * Maneja errores de validación de reglas de negocio.
+     *
+     * Estas excepciones indican que la petición es incorrecta o
+     * no cumple las reglas del dominio (HTTP 400).
+     */
     @ExceptionHandler({
             ProductoInvalidoException.class,
             ClienteExisteException.class,
@@ -53,6 +80,13 @@ public class GlobalExceptionHandler {
         return buildError(ex, HttpStatus.BAD_REQUEST, request);
     }
 
+    /**
+     * Maneja errores producidos por validaciones de Bean Validation (@Valid).
+     *
+     * Se extrae el primer mensaje de error para devolver una respuesta
+     * simple al cliente. En APIs más complejas se suele devolver una lista
+     * completa de errores de validación.
+     */
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ApiError> handleValidation(
             MethodArgumentNotValidException ex,
@@ -69,6 +103,25 @@ public class GlobalExceptionHandler {
         );
     }
 
+    /**
+     * Maneja conflictos de estado del recurso (HTTP 409).
+     *
+     * Ejemplo típico: intentar crear un cliente que ya existe.
+     */
+    @ExceptionHandler(ClienteYaExisteException.class)
+    public ResponseEntity<ApiError> handleConflict(
+            ClienteYaExisteException ex,
+            HttpServletRequest request) {
+
+        return buildError(ex, HttpStatus.CONFLICT, request);
+    }
+
+    /**
+     * Fallback de seguridad.
+     *
+     * Captura cualquier excepción no manejada previamente para evitar
+     * exponer detalles internos de la aplicación al cliente.
+     */
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiError> handleGeneric(
             Exception ex,
@@ -76,17 +129,4 @@ public class GlobalExceptionHandler {
 
         return buildError(ex, HttpStatus.INTERNAL_SERVER_ERROR, request);
     }
-
-    @ExceptionHandler(ClienteYaExisteException.class)
-    public ResponseEntity<ApiError> handleClienteYaExiste(
-            ClienteYaExisteException ex,
-            HttpServletRequest request) {
-
-        return buildError(ex, HttpStatus.CONFLICT, request);
-    }
-
-    }
-
-
-
-
+}
