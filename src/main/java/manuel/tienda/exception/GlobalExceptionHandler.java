@@ -117,6 +117,20 @@ public class GlobalExceptionHandler {
     }
 
     /**
+     * Maneja errores de argumentos inválidos.
+     *
+     * IllegalArgumentException se lanza cuando un argumento no cumple con
+     * las precondiciones de una función (ej: username vacío, valores nulos).
+     */
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<ApiError> handleIllegalArgument(
+            IllegalArgumentException ex,
+            HttpServletRequest request) {
+
+        return buildError(ex, HttpStatus.BAD_REQUEST, request);
+    }
+
+    /**
      * Fallback de seguridad.
      *
      * Captura cualquier excepción no manejada previamente para evitar

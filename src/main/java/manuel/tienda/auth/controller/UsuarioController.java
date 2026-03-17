@@ -6,6 +6,10 @@ import manuel.tienda.auth.dto.UsuarioResponse;
 import manuel.tienda.auth.entity.Usuario;
 import manuel.tienda.auth.mapper.UsuarioMapper;
 import manuel.tienda.auth.service.UsuarioService;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -29,12 +33,10 @@ public class UsuarioController {
      * Obtiene todos los usuarios.
      */
     @GetMapping
-    public ResponseEntity<List<UsuarioResponse>> findAll() {
+    public ResponseEntity<Page<UsuarioResponse>> findAll(@PageableDefault(sort = "username", direction = Sort.Direction.ASC) Pageable pageable) {
 
-        List<UsuarioResponse> usuarios = usuarioService.findAll()
-                .stream()
-                .map(UsuarioMapper::toResponse)
-                .toList();
+        Page<UsuarioResponse> usuarios = usuarioService.findAll(pageable)
+                .map(UsuarioMapper::toResponse);
 
         return ResponseEntity.ok(usuarios);
     }

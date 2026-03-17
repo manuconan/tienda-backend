@@ -45,7 +45,7 @@ class ProductoServiceTest {
 
         assertNotNull(guardado.getId());
         assertEquals("Producto Test", guardado.getNombre());
-        assertEquals(10.0, guardado.getPrecio());
+        assertEquals(BigDecimal.valueOf(10.0), guardado.getPrecio());
         assertEquals(5, guardado.getStock());
     }
 
@@ -76,7 +76,7 @@ class ProductoServiceTest {
         Producto actualizado = productoService.update(guardado.getId(), nuevo);
 
         assertEquals("Actualizado", actualizado.getNombre());
-        assertEquals(20.0, actualizado.getPrecio());
+        assertEquals(BigDecimal.valueOf(20.0), actualizado.getPrecio());
         assertEquals(10, actualizado.getStock());
     }
 

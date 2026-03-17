@@ -4,11 +4,11 @@ import manuel.tienda.producto.entity.Producto;
 import manuel.tienda.exception.ProductoInvalidoException;
 import manuel.tienda.exception.ProductoNoEncontradoException;
 import manuel.tienda.producto.repository.ProductoRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
-
-import java.util.List;
 
 @Service
 @Transactional
@@ -32,8 +32,8 @@ public class ProductoService {
      * Obtiene todos los productos.
      */
     @Transactional(readOnly = true)
-    public List<Producto> findAll() {
-        return productoRepository.findAll();
+    public Page<Producto> findAll(Pageable pageable) {
+        return productoRepository.findAll(pageable);
     }
 
     /**

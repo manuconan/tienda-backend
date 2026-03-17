@@ -6,11 +6,14 @@ import manuel.tienda.producto.dto.ProductoResponse;
 import manuel.tienda.producto.entity.Producto;
 import manuel.tienda.producto.mapper.ProductoMapper;
 import manuel.tienda.producto.service.ProductoService;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
-import java.util.List;
 
 @RestController
 @RequestMapping("/productos")
@@ -26,12 +29,11 @@ public class ProductoController {
      * Obtener todos los productos.
      */
     @GetMapping
-    public ResponseEntity<List<ProductoResponse>> getAll() {
+    public ResponseEntity<Page<ProductoResponse>> getAll(
+            @PageableDefault(sort = "id", direction = Sort.Direction.ASC) Pageable pageable) {
 
-        List<ProductoResponse> productos = productoService.findAll()
-                .stream()
-                .map(ProductoMapper::toResponse)
-                .toList();
+        Page<ProductoResponse> productos = productoService.findAll(pageable)
+                .map(ProductoMapper::toResponse);
 
         return ResponseEntity.ok(productos);
     }
