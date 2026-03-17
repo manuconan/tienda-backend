@@ -61,11 +61,6 @@ public class UsuarioService {
 
         return usuarioRepository.findByUsername(username)
                 .orElseThrow(() ->
-<<<<<<< HEAD
                         new ClienteNoEncontradoException());
-=======
-                        new ClienteNoEncontradoException(
-                                "Usuario no encontrado"));
->>>>>>> 1d34dac920c26f55f2d783b1721a3293cf300e60
     }
 }

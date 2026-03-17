@@ -1,22 +1,9 @@
-package manuel.tienda;
+package manuel.tienda.producto;
 
-<<<<<<< HEAD
 import manuel.tienda.producto.entity.Producto;
-import manuel.tienda.exception.ProductoInvalidoException;
-import manuel.tienda.exception.ProductoNoEncontradoException;
-=======
-<<<<<<<< HEAD:src/test/java/manuel/tienda/core/ProductoServiceTest.java
-
-import manuel.tienda.exception.ProductoInvalidoException;
-import manuel.tienda.exception.ProductoNoEncontradoException;
-import manuel.tienda.producto.entity.Producto;
-========
-import manuel.tienda.producto.entity.Producto;
-import manuel.tienda.exception.ProductoInvalidoException;
-import manuel.tienda.exception.ProductoNoEncontradoException;
->>>>>>>> 1d34dac920c26f55f2d783b1721a3293cf300e60:src/test/java/manuel/tienda/ProductoServiceTest.java
->>>>>>> 1d34dac920c26f55f2d783b1721a3293cf300e60
 import manuel.tienda.producto.service.ProductoService;
+import manuel.tienda.exception.ProductoInvalidoException;
+import manuel.tienda.exception.ProductoNoEncontradoException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -45,11 +32,7 @@ class ProductoServiceTest {
     private Producto crearProductoValido() {
         Producto producto = new Producto();
         producto.setNombre("Producto Test");
-<<<<<<< HEAD
         producto.setPrecio(BigDecimal.valueOf(10.0));
-=======
-        producto.setPrecio(new BigDecimal(10));
->>>>>>> 1d34dac920c26f55f2d783b1721a3293cf300e60
         producto.setStock(5);
         return producto;
     }
@@ -87,11 +70,7 @@ class ProductoServiceTest {
 
         Producto nuevo = new Producto();
         nuevo.setNombre("Actualizado");
-<<<<<<< HEAD
         nuevo.setPrecio(BigDecimal.valueOf(20.0));
-=======
-        nuevo.setPrecio(new BigDecimal(20));
->>>>>>> 1d34dac920c26f55f2d783b1721a3293cf300e60
         nuevo.setStock(10);
 
         Producto actualizado = productoService.update(guardado.getId(), nuevo);

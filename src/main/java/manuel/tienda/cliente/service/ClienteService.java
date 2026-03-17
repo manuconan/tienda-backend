@@ -8,14 +8,15 @@ import manuel.tienda.cliente.mapper.ClienteMapper;
 import manuel.tienda.cliente.repository.ClienteRepository;
 import manuel.tienda.exception.ClienteExisteException;
 import manuel.tienda.exception.ClienteNoEncontradoException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-
 @Service
 public class ClienteService {
+
     private final ClienteRepository clienteRepository;
     private final PasswordEncoder passwordEncoder;
 
@@ -41,7 +42,8 @@ public class ClienteService {
     //buscar un Cliente por usarname
     public ClienteResponse findUserByUsername(String username) {
 
-        Cliente cliente = clienteRepository.findByUsername(username).orElseThrow(() -> new ClienteNoEncontradoException());
+        Cliente cliente = clienteRepository.findByUsername(username)
+                .orElseThrow(() -> new ClienteNoEncontradoException());
 
         return ClienteMapper.toResponse(cliente);
     }
@@ -60,8 +62,11 @@ public class ClienteService {
      *
      */
     @Transactional(readOnly = true)
-    public List<ClienteResponse> findAll() {
-        return clienteRepository.findAll().stream().map(ClienteMapper::toResponse).toList();
+    public Page<ClienteResponse> findAll(Pageable pageable) {
+
+        Page<Cliente> clientes = clienteRepository.findAll(pageable);
+
+        return clientes.map(ClienteMapper::toResponse);
     }
 
     /*
@@ -139,4 +144,3 @@ public class ClienteService {
         return ClienteMapper.toResponse(cliente);
     }
 }
-

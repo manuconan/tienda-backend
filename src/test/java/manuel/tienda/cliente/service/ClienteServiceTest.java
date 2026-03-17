@@ -1,10 +1,9 @@
-package manuel.tienda.core.cliente.service;
+package manuel.tienda.cliente.service;
 
 
 import manuel.tienda.cliente.dto.ClienteRequest;
 import manuel.tienda.cliente.entity.Cliente;
 import manuel.tienda.cliente.repository.ClienteRepository;
-import manuel.tienda.cliente.service.ClienteService;
 import manuel.tienda.exception.ClienteNoEncontradoException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
