@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 /**
  * Maneja de forma centralizada todas las excepciones lanzadas por la aplicación.
- *
+ * <p>
  * Objetivos:
  * - Evitar duplicación de código en controladores.
  * - Garantizar un formato de error consistente (ApiError).
@@ -21,7 +21,7 @@ public class GlobalExceptionHandler {
 
     /**
      * Fábrica central de respuestas de error.
-     *
+     * <p>
      * Centralizar la creación de ApiError evita inconsistencias si el formato
      * de error cambia en el futuro (p.ej., añadir errorCode o detalles).
      *
@@ -47,7 +47,7 @@ public class GlobalExceptionHandler {
 
     /**
      * Maneja recursos que no existen.
-     *
+     * <p>
      * Agrupar excepciones con la misma semántica HTTP (404) reduce
      * duplicación y facilita mantener el handler cuando el proyecto crece.
      */
@@ -64,7 +64,7 @@ public class GlobalExceptionHandler {
 
     /**
      * Maneja errores de validación de reglas de negocio.
-     *
+     * <p>
      * Estas excepciones indican que la petición es incorrecta o
      * no cumple las reglas del dominio (HTTP 400).
      */
@@ -82,7 +82,7 @@ public class GlobalExceptionHandler {
 
     /**
      * Maneja errores producidos por validaciones de Bean Validation (@Valid).
-     *
+     * <p>
      * Se extrae el primer mensaje de error para devolver una respuesta
      * simple al cliente. En APIs más complejas se suele devolver una lista
      * completa de errores de validación.
@@ -91,21 +91,20 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiError> handleValidation(
             MethodArgumentNotValidException ex,
             HttpServletRequest request) {
-
-        String message = ex.getBindingResult()
-                .getFieldError()
-                .getDefaultMessage();
-
-        return buildError(
-                new RuntimeException(message),
-                HttpStatus.BAD_REQUEST,
-                request
-        );
+        String message = ex.getBindingResult().getFieldErrors()
+                .stream()
+                .findFirst()
+                .map(error -> error.getField() + ": " + error.getDefaultMessage())
+                .orElse("Error de validación");
+        return
+                buildError(new RuntimeException(message),
+                        HttpStatus.BAD_REQUEST, request);
     }
+
 
     /**
      * Maneja conflictos de estado del recurso (HTTP 409).
-     *
+     * <p>
      * Ejemplo típico: intentar crear un cliente que ya existe.
      */
     @ExceptionHandler(ClienteYaExisteException.class)
@@ -118,7 +117,7 @@ public class GlobalExceptionHandler {
 
     /**
      * Maneja errores de argumentos inválidos.
-     *
+     * <p>
      * IllegalArgumentException se lanza cuando un argumento no cumple con
      * las precondiciones de una función (ej: username vacío, valores nulos).
      */
@@ -132,7 +131,7 @@ public class GlobalExceptionHandler {
 
     /**
      * Fallback de seguridad.
-     *
+     * <p>
      * Captura cualquier excepción no manejada previamente para evitar
      * exponer detalles internos de la aplicación al cliente.
      */

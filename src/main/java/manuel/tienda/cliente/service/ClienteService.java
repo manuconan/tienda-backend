@@ -39,71 +39,38 @@ public class ClienteService {
         return new ClienteResponse(c.getId(), c.getUsername());
     }
 
-    //buscar un Cliente por usarname
-    public ClienteResponse findUserByUsername(String username) {
+    /*
+     * Encontrar a todos los Clientes
+     *
+     */
+    @Transactional(readOnly = true)
+    public Page<ClienteResponse> findAll(String username, Pageable pageable) {
+        if (username != null && !username.isEmpty()) {
+            return clienteRepository.findByUsernameContaining(username, pageable)
+                    .map(ClienteMapper::toResponse);
+        } else {
+            return clienteRepository.findAll(pageable)
+                    .map(ClienteMapper::toResponse);
+        }
 
-        Cliente cliente = clienteRepository.findByUsername(username)
-                .orElseThrow(() -> new ClienteNoEncontradoException());
-
-        return ClienteMapper.toResponse(cliente);
     }
 
     /**
      * Encontrar un Cliente por id
      */
     public ClienteResponse findById(Long id) {
-        Cliente cliente = clienteRepository.findById(id).orElseThrow(() -> new ClienteNoEncontradoException());
+        Cliente cliente = clienteRepository.findById(id).orElseThrow(ClienteNoEncontradoException::new);
 
         return ClienteMapper.toResponse(cliente);
     }
 
-    /*
-     *Encontrar a todos los Clientes
-     *
-     */
-    @Transactional(readOnly = true)
-    public Page<ClienteResponse> findAll(Pageable pageable) {
+    //buscar un Cliente por usarname
+    public ClienteResponse findUserByUsername(String username) {
 
-        Page<Cliente> clientes = clienteRepository.findAll(pageable);
+        Cliente cliente = clienteRepository.findByUsername(username)
+                .orElseThrow(ClienteNoEncontradoException::new);
 
-        return clientes.map(ClienteMapper::toResponse);
-    }
-
-    /*
-     * Modificar Cliente
-     */
-    public ClienteResponse updateId(Long id, ClienteRequest clienteRequest) {
-
-
-        Cliente encontrado = clienteRepository.findById(id).orElseThrow(ClienteNoEncontradoException::new);
-
-        if (!clienteRequest.getUsername().isBlank()) {
-            if (!encontrado.getUsername().equals(clienteRequest.getUsername())) {
-
-                if (!clienteRepository.existsByUsername(clienteRequest.getUsername())) {
-                    encontrado.updateUsername(clienteRequest.getUsername());
-                }
-            } else throw new ClienteExisteException();
-
-            if (!clienteRequest.getPassword().isBlank()) {
-                encontrado.updatePasswordHash(passwordEncoder.encode(clienteRequest.getPassword()));
-            }
-            clienteRepository.save(encontrado);
-
-        }
-        return ClienteMapper.toResponse(encontrado);
-
-    }
-
-    /*
-     * Eliminar un Cliente
-     */
-    @Transactional
-    public void delete(Long id) {
-        Cliente clienteEncontrado = clienteRepository.findById(id).orElseThrow(() -> new ClienteNoEncontradoException());
-
-        clienteRepository.delete(clienteEncontrado);
-
+        return ClienteMapper.toResponse(cliente);
     }
 
     /*
@@ -142,5 +109,16 @@ public class ClienteService {
         clienteRepository.save(cliente);
 
         return ClienteMapper.toResponse(cliente);
+    }
+
+    /*
+     * Eliminar un Cliente
+     */
+    @Transactional
+    public void delete(Long id) {
+        Cliente clienteEncontrado = clienteRepository.findById(id).orElseThrow(ClienteNoEncontradoException::new);
+
+        clienteRepository.delete(clienteEncontrado);
+
     }
 }
