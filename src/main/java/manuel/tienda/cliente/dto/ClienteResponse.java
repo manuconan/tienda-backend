@@ -12,5 +12,6 @@ public class ClienteResponse {
 
     private final Long id;
     private final String username;
+    private final Boolean activo;
 
 }

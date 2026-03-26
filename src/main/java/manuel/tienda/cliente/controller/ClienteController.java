@@ -1,6 +1,8 @@
 package manuel.tienda.cliente.controller;
 
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.Size;
 import manuel.tienda.cliente.dto.ClienteRequest;
 import manuel.tienda.cliente.dto.ClienteResponse;
 import manuel.tienda.cliente.service.ClienteService;
@@ -17,6 +19,7 @@ public class ClienteController {
     private final ClienteService clienteService;
 
     public ClienteController(ClienteService clienteService) {
+
         this.clienteService = clienteService;
     }
 
@@ -36,7 +39,7 @@ public class ClienteController {
      * Obtener cliente por id
      */
     @GetMapping("/{id}")
-    public ResponseEntity<ClienteResponse> findById(@PathVariable Long id) {
+    public ResponseEntity<ClienteResponse> findById(@PathVariable @Min(1) Long id) {
 
         ClienteResponse cliente = clienteService.findById(id);
 
@@ -47,7 +50,7 @@ public class ClienteController {
      * Listar todos los clientes
      */
     @GetMapping
-    public ResponseEntity<Page<ClienteResponse>> listar(@RequestParam(required = false) String username, Pageable pageable) {
+    public ResponseEntity<Page<ClienteResponse>> listar(@RequestParam(required = false) @Size(min = 4, max = 15) String username, Pageable pageable) {
 
         Page<ClienteResponse> clientes = clienteService.findAll(username, pageable);
 
@@ -58,7 +61,7 @@ public class ClienteController {
      * Eliminar cliente
      */
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> eliminar(@PathVariable Long id) {
+    public ResponseEntity<Void> eliminar(@PathVariable @Min(1) Long id) {
 
         clienteService.delete(id);
 

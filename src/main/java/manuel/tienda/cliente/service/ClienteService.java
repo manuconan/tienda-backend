@@ -33,7 +33,7 @@ public class ClienteService {
      * Constructor para inyección de dependencias.
      *
      * @param clienteRepository Repositorio para acceder a datos de clientes.
-     * @param passwordEncoder Codificador para encriptar contraseñas.
+     * @param passwordEncoder   Codificador para encriptar contraseñas.
      */
     public ClienteService(ClienteRepository clienteRepository, PasswordEncoder passwordEncoder) {
         this.clienteRepository = clienteRepository;
@@ -57,12 +57,13 @@ public class ClienteService {
         Cliente c = new Cliente(clienteRequest.getUsername(), passwordEncoder.encode(clienteRequest.getPassword()));
         clienteRepository.save(c);
 
-        return new ClienteResponse(c.getId(), c.getUsername());
+        return new ClienteResponse(c.getId(), c.getUsername(), c.getActivo());
     }
 
     /**
-     * Encuentra todos los clientes con soporte para paginación y filtrado opcional por username.
+     * Encuentra todos los clientes con soporte para paginación y filtrado opcional por username y estado activo.
      * Si se proporciona un username, filtra clientes que contengan ese texto en el username.
+     * Si se proporciona un estado activo, filtra clientes por ese estado.
      *
      * @param username Filtro opcional para buscar clientes por username (puede ser null o vacío).
      * @param pageable Información de paginación y ordenación.
@@ -70,10 +71,14 @@ public class ClienteService {
      */
     @Transactional(readOnly = true)
     public Page<ClienteResponse> findAll(String username, Pageable pageable) {
+
         if (username != null && !username.isEmpty()) {
+            // Filtro solo por username
             return clienteRepository.findByUsernameContaining(username, pageable)
                     .map(ClienteMapper::toResponse);
+
         } else {
+            // Sin filtros
             return clienteRepository.findAll(pageable)
                     .map(ClienteMapper::toResponse);
         }
@@ -110,11 +115,11 @@ public class ClienteService {
      * Actualiza los datos de un cliente existente.
      * Permite actualizar username (si no está en uso) y/o contraseña.
      *
-     * @param id ID del cliente a actualizar.
+     * @param id             ID del cliente a actualizar.
      * @param clienteRequest Datos a actualizar (username y/o password).
      * @return ClienteResponse con los datos actualizados del cliente.
      * @throws ClienteNoEncontradoException Si no se encuentra el cliente con el ID proporcionado.
-     * @throws ClienteExisteException Si el nuevo username ya está en uso por otro cliente.
+     * @throws ClienteExisteException       Si el nuevo username ya está en uso por otro cliente.
      */
     @Transactional
     public ClienteResponse update(Long id, ClienteRequest clienteRequest) {
@@ -157,5 +162,22 @@ public class ClienteService {
         Cliente clienteEncontrado = clienteRepository.findById(id).orElseThrow(ClienteNoEncontradoException::new);
 
         clienteRepository.delete(clienteEncontrado);
+    }
+
+    /**
+     * Cambia el estado activo de un cliente.
+     *
+     * @param id     ID del cliente a modificar.
+     * @param activo nuevo estado del cliente.
+     * @return ClienteResponse con los datos actualizados del cliente.
+     * @throws ClienteNoEncontradoException Si no se encuentra el cliente con el ID proporcionado.
+     */
+    @Transactional
+    public ClienteResponse cambiarEstado(Long id, Boolean activo) {
+        Cliente cliente = clienteRepository.findById(id).orElseThrow(ClienteNoEncontradoException::new);
+
+        clienteRepository.save(cliente);
+
+        return ClienteMapper.toResponse(cliente);
     }
 }

@@ -20,6 +20,9 @@ public class Cliente {
     @Column(nullable = false, length = 60)
     private String passwordHash;
 
+    @Column(nullable = false)
+    private Boolean activo = true;
+
     public Cliente(String username, String passwordHash) {
         if (username == null || username.isBlank()) {
             throw new IllegalArgumentException("Username no puede estar vacío");

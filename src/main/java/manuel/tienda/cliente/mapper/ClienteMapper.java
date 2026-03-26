@@ -10,7 +10,8 @@ public class ClienteMapper {
     public static ClienteResponse toResponse(Cliente cliente) {
         return new ClienteResponse(
                 cliente.getId(),
-                cliente.getUsername()
+                cliente.getUsername(),
+                cliente.getActivo()
         );
     }
 }

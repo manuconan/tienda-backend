@@ -66,7 +66,6 @@ public class GlobalExceptionHandler {
      */
     @ExceptionHandler({
             ProductoInvalidoException.class,
-            ClienteExisteException.class,
             InsufficientStockException.class
     })
     public ResponseEntity<ApiError> handleBadRequest(
@@ -102,9 +101,12 @@ public class GlobalExceptionHandler {
     /**
      * Maneja conflictos de estado del recurso (HTTP 409).
      */
-    @ExceptionHandler(ClienteYaExisteException.class)
+    @ExceptionHandler({
+            ClienteExisteException.class,
+            ClienteYaExisteException.class
+    })
     public ResponseEntity<ApiError> handleConflict(
-            ClienteYaExisteException ex,
+            Exception ex,
             HttpServletRequest request) {
 
         return buildError(ex, HttpStatus.CONFLICT, "RESOURCE_CONFLICT", request);
