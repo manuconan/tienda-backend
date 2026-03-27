@@ -1,11 +1,11 @@
-package manuel.tienda.auth.controller;
+package manuel.tienda.Usuario.controller;
 
 import jakarta.validation.Valid;
-import manuel.tienda.auth.dto.UsuarioRequest;
-import manuel.tienda.auth.dto.UsuarioResponse;
-import manuel.tienda.auth.entity.Usuario;
-import manuel.tienda.auth.mapper.UsuarioMapper;
-import manuel.tienda.auth.service.UsuarioService;
+import manuel.tienda.Usuario.dto.UsuarioRequest;
+import manuel.tienda.Usuario.dto.UsuarioResponse;
+import manuel.tienda.Usuario.entity.Usuario;
+import manuel.tienda.Usuario.mapper.UsuarioMapper;
+import manuel.tienda.Usuario.service.UsuarioService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -14,7 +14,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
-import java.util.List;
 
 /**
  * Controlador REST para la gestión de usuarios.

@@ -54,8 +54,9 @@ public interface ClienteRepository extends JpaRepository<Cliente, Long> {
      * Busca clientes por username y estado activo.
      *
      * @param username cadena parcial a buscar en el username
+     * @param activo estado del cliente (true/false)
      * @param pageable información de paginación
      * @return página con clientes que coinciden ambos criterios
      */
-    Page<Cliente> findByUsernameContainingAndActivo(String username, Pageable pageable);
+    Page<Cliente> findByUsernameContainingAndActivo(String username, Boolean activo, Pageable pageable);
 }

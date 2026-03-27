@@ -176,6 +176,8 @@ public class ClienteService {
     public ClienteResponse cambiarEstado(Long id, Boolean activo) {
         Cliente cliente = clienteRepository.findById(id).orElseThrow(ClienteNoEncontradoException::new);
 
+        cliente.updateActivo(activo);
+
         clienteRepository.save(cliente);
 
         return ClienteMapper.toResponse(cliente);

@@ -1,7 +1,7 @@
-package manuel.tienda.auth.service;
+package manuel.tienda.Usuario.service;
 
-import manuel.tienda.auth.entity.Usuario;
-import manuel.tienda.auth.repository.UsuarioRepository;
+import manuel.tienda.Usuario.entity.Usuario;
+import manuel.tienda.Usuario.repository.UsuarioRepository;
 import manuel.tienda.exception.ClienteExisteException;
 import manuel.tienda.exception.ClienteNoEncontradoException;
 import org.springframework.data.domain.Page;
@@ -9,8 +9,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
 
 /**
  * Servicio encargado de la lógica de negocio relacionada con usuarios.

@@ -1,6 +1,6 @@
-package manuel.tienda.auth.repository;
+package manuel.tienda.Usuario.repository;
 
-import manuel.tienda.auth.entity.Usuario;
+import manuel.tienda.Usuario.entity.Usuario;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;

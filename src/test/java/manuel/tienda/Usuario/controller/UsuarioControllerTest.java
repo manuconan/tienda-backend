@@ -1,10 +1,10 @@
-package manuel.tienda.auth.controller;
+package manuel.tienda.Usuario.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import manuel.tienda.auth.dto.UsuarioRequest;
-import manuel.tienda.auth.dto.UsuarioResponse;
-import manuel.tienda.auth.entity.Usuario;
-import manuel.tienda.auth.service.UsuarioService;
+import manuel.tienda.auth.service.JwtService;
+import manuel.tienda.Usuario.dto.UsuarioRequest;
+import manuel.tienda.Usuario.entity.Usuario;
+import manuel.tienda.Usuario.service.UsuarioService;
 import manuel.tienda.exception.ClienteExisteException;
 import manuel.tienda.exception.ClienteNoEncontradoException;
 import org.junit.jupiter.api.DisplayName;
@@ -36,6 +36,9 @@ class UsuarioControllerTest {
 
     @MockBean
     private UsuarioService usuarioService;
+
+    @MockBean
+    private JwtService jwtService;
 
     @Autowired
     private ObjectMapper objectMapper; 
@@ -164,12 +167,12 @@ class UsuarioControllerTest {
     }
 
     @Test
-    @DisplayName("Debe retornar 500 si el JSON está mal formado")
+    @DisplayName("Debe retornar 400 si el JSON está mal formado")
     void jsonInvalido() throws Exception {
 
         mockMvc.perform(post("/usuarios")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{ json mal formado }"))
-                .andExpect(status().isInternalServerError());
+                .andExpect(status().isBadRequest());
     }
 }

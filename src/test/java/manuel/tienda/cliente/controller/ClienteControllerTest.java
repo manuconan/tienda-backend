@@ -1,6 +1,7 @@
 package manuel.tienda.cliente.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import manuel.tienda.auth.service.JwtService;
 import manuel.tienda.cliente.dto.ClienteRequest;
 import manuel.tienda.cliente.dto.ClienteResponse;
 import manuel.tienda.cliente.service.ClienteService;
@@ -52,6 +53,9 @@ class ClienteControllerTest {
     @MockBean
     private ClienteService clienteService;
 
+    @MockBean
+    private JwtService jwtService;
+
     @Autowired
     private ObjectMapper objectMapper;
 
@@ -67,7 +71,7 @@ class ClienteControllerTest {
         request.setUsername("cliente1");
         request.setPassword("password123");
 
-        ClienteResponse response = new ClienteResponse(1L, "cliente1");
+        ClienteResponse response = new ClienteResponse(1L, "cliente1", true);
 
         when(clienteService.registrar(Mockito.any(ClienteRequest.class))).thenReturn(response);
 
@@ -89,7 +93,7 @@ class ClienteControllerTest {
     @DisplayName("Debe obtener un cliente por id")
     void obtenerClientePorId() throws Exception {
 
-        ClienteResponse response = new ClienteResponse(1L, "cliente1");
+        ClienteResponse response = new ClienteResponse(1L, "cliente1", true);
 
         when(clienteService.findById(1L)).thenReturn(response);
 
@@ -109,8 +113,8 @@ class ClienteControllerTest {
     void listarClientes() throws Exception {
 
         Page<ClienteResponse> page = new PageImpl<>(List.of(
-                new ClienteResponse(1L, "cliente1"),
-                new ClienteResponse(2L, "cliente2")
+                new ClienteResponse(1L, "cliente1", true),
+                new ClienteResponse(2L, "cliente2", true)
         ));
 
         when(clienteService.findAll(Mockito.any(), Mockito.any(Pageable.class))).thenReturn(page);

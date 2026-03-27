@@ -1,4 +1,4 @@
-package manuel.tienda.auth.dto;
+package manuel.tienda.Usuario.dto;
 
 
 import lombok.AllArgsConstructor;

@@ -1,6 +1,7 @@
 package manuel.tienda.producto.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import manuel.tienda.auth.service.JwtService;
 import manuel.tienda.producto.dto.ProductoRequest;
 import manuel.tienda.producto.dto.ProductoResponse;
 import manuel.tienda.producto.entity.Producto;
@@ -52,6 +53,9 @@ class ProductoControllerTest {
 
     @MockBean
     private ProductoService productoService;
+
+    @MockBean
+    private JwtService jwtService;
 
     @Autowired
     private ObjectMapper objectMapper;

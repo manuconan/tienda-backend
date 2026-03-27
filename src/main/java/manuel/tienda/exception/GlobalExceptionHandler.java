@@ -4,6 +4,8 @@ import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -121,6 +123,28 @@ public class GlobalExceptionHandler {
             HttpServletRequest request) {
 
         return buildError(ex, HttpStatus.BAD_REQUEST, "INVALID_ARGUMENT", request);
+    }
+
+    /**
+     * Maneja body JSON mal formado o no parseable (HTTP 400).
+     */
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<ApiError> handleMalformedJson(
+            HttpMessageNotReadableException ex,
+            HttpServletRequest request) {
+
+        return buildError(ex, HttpStatus.BAD_REQUEST, "MALFORMED_JSON", request);
+    }
+
+    /**
+     * Maneja credenciales de login inválidas (HTTP 401).
+     */
+    @ExceptionHandler(BadCredentialsException.class)
+    public ResponseEntity<ApiError> handleBadCredentials(
+            BadCredentialsException ex,
+            HttpServletRequest request) {
+
+        return buildError(ex, HttpStatus.UNAUTHORIZED, "AUTH_INVALID_CREDENTIALS", request);
     }
 
     /**

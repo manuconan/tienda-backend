@@ -8,7 +8,7 @@ import manuel.tienda.cliente.dto.ClienteResponse;
 import manuel.tienda.cliente.service.ClienteService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -32,7 +32,7 @@ public class ClienteController {
 
         ClienteResponse cliente = clienteService.registrar(request);
 
-        return ResponseEntity.ok(cliente);
+        return ResponseEntity.status(HttpStatus.CREATED).body(cliente);
     }
 
     /**

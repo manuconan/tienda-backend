@@ -35,14 +35,20 @@ public class Cliente {
     }
 
     public void updateUsername(String username) {
-        if (username != null || !username.isEmpty() || !username.isBlank()) {
+        if (username != null && !username.isEmpty() && !username.isBlank()) {
             this.username = username;
         }
     }
 
     public void updatePasswordHash(String passwordHash) {
-        if (passwordHash != null || !passwordHash.isEmpty() || !passwordHash.isEmpty()) {
+        if (passwordHash != null && !passwordHash.isEmpty() && !passwordHash.isBlank()) {
             this.passwordHash = passwordHash;
+        }
+    }
+
+    public void updateActivo(Boolean activo) {
+        if (activo != null) {
+            this.activo = activo;
         }
     }
 }

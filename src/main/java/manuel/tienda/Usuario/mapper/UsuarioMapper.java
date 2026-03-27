@@ -1,8 +1,8 @@
-package manuel.tienda.auth.mapper;
+package manuel.tienda.Usuario.mapper;
 
-import manuel.tienda.auth.dto.UsuarioRequest;
-import manuel.tienda.auth.dto.UsuarioResponse;
-import manuel.tienda.auth.entity.Usuario;
+import manuel.tienda.Usuario.dto.UsuarioRequest;
+import manuel.tienda.Usuario.dto.UsuarioResponse;
+import manuel.tienda.Usuario.entity.Usuario;
 public class UsuarioMapper {
 
     public static Usuario toEntity(UsuarioRequest usuarioRequest) {

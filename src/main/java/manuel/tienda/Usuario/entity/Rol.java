@@ -1,4 +1,4 @@
-package manuel.tienda.auth.entity;
+package manuel.tienda.Usuario.entity;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
