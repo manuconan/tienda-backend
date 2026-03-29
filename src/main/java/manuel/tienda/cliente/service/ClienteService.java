@@ -6,6 +6,7 @@ import manuel.tienda.cliente.dto.ClienteResponse;
 import manuel.tienda.cliente.entity.Cliente;
 import manuel.tienda.cliente.mapper.ClienteMapper;
 import manuel.tienda.cliente.repository.ClienteRepository;
+import manuel.tienda.cliente.role.Role;
 import manuel.tienda.exception.ClienteExisteException;
 import manuel.tienda.exception.ClienteNoEncontradoException;
 import org.springframework.data.domain.Page;
@@ -55,6 +56,7 @@ public class ClienteService {
         }
 
         Cliente c = new Cliente(clienteRequest.getUsername(), passwordEncoder.encode(clienteRequest.getPassword()));
+        c.setRole(Role.USER);
         clienteRepository.save(c);
 
         return new ClienteResponse(c.getId(), c.getUsername(), c.getActivo());

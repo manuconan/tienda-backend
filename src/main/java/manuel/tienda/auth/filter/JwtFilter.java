@@ -11,56 +11,67 @@ import manuel.tienda.auth.service.JwtService;
 
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-import java.util.Collections;
+import java.util.List;
 
+/**
+ * Filtro de seguridad que autentica la solicitud a partir del encabezado Authorization.
+ */
 @Component
 @RequiredArgsConstructor
 public class JwtFilter extends OncePerRequestFilter {
 
     private final JwtService jwtService;
 
+    /**
+     * Valida el token JWT y, si es correcto, establece la autenticacion en el contexto de Spring Security.
+     */
     @Override
-    protected void doFilterInternal(
-            HttpServletRequest request,
-            HttpServletResponse response,
-            FilterChain filterChain
-    ) throws ServletException, IOException {
+    protected void doFilterInternal(HttpServletRequest request,
+                                    HttpServletResponse response,
+                                    FilterChain filterChain)
+            throws ServletException, IOException {
 
-        // 1. Leer header Authorization
         String authHeader = request.getHeader("Authorization");
 
-        // 2. Si no hay token → continuar
+        // Si no hay token Bearer, la solicitud continua sin autenticar.
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             filterChain.doFilter(request, response);
             return;
         }
 
-        // 3. Extraer token
         String token = authHeader.substring(7);
 
-        // 4. Extraer username del token
-        String username = jwtService.extractUsername(token);
+        // Si el token no es valido, se delega la decision al flujo de seguridad.
+        if (!jwtService.isTokenValid(token)) {
+            filterChain.doFilter(request, response);
+            return;
+        }
 
-        // 5. Si hay username y no hay auth previa
+        String username = jwtService.extractUsername(token);
+        String role = jwtService.extractRole(token);
+
+        // Evita sobreescribir autenticacion si ya fue establecida por otro filtro.
         if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
 
-            // 6. Crear autenticación (sin roles de momento)
-            UsernamePasswordAuthenticationToken authentication =
+            // Spring Security espera autoridades con prefijo ROLE_.
+            List<SimpleGrantedAuthority> authorities =
+                    List.of(new SimpleGrantedAuthority("ROLE_" + role));
+
+            UsernamePasswordAuthenticationToken auth =
                     new UsernamePasswordAuthenticationToken(
                             username,
                             null,
-                            Collections.emptyList()
+                            authorities
                     );
 
-            // 7. Guardar en contexto de seguridad
-            SecurityContextHolder.getContext().setAuthentication(authentication);
+            SecurityContextHolder.getContext().setAuthentication(auth);
         }
 
-        // 8. Continuar la cadena
         filterChain.doFilter(request, response);
     }
 }

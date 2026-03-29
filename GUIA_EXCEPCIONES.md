@@ -1,105 +1,103 @@
-# 🚨 GUÍA DE EXCEPCIONES - Tienda Online API
+# Guia de Excepciones - Tienda Online API
 
-## 📌 Para Desarrolladores
+## Objetivo
 
-### ¿Cómo lanzar excepciones correctamente?
+Este documento define las reglas para lanzar, mapear y mantener excepciones de dominio de forma consistente en toda la API.
 
-#### 1. **Producto no existe o no es válido**
+## Criterios de uso
+
+### Producto no existe o datos invalidos
+
 ```java
 // HTTP 404 - Producto no existe
 throw new ProductoNoEncontradoException(id);
 
-// HTTP 400 - Datos inválidos
+// HTTP 400 - Datos de entrada invalidos
 throw new ProductoInvalidoException("El precio debe ser mayor que cero");
 ```
 
-#### 2. **Cliente duplicado o no existe**
+### Cliente duplicado o no encontrado
+
 ```java
-// HTTP 400 - Cliente ya existe (duplicado en registro)
+// HTTP 400 - Duplicado en registro
 throw new ClienteExisteException();
 
-// HTTP 404 - Cliente no existe
+// HTTP 404 - Recurso no encontrado
 throw new ClienteNoEncontradoException();
 
 // HTTP 409 - Conflicto de estado
 throw new ClienteYaExisteException("El cliente ya existe con este ID");
 ```
 
-#### 3. **Stock insuficiente**
+### Stock insuficiente
+
 ```java
-// HTTP 400 - No hay suficiente stock
+// HTTP 400 - Regla de negocio incumplida
 throw new InsufficientStockException("Stock insuficiente para la compra");
 ```
 
-#### 4. **Argumentos inválidos**
+### Argumentos invalidos
+
 ```java
-// HTTP 400 - Argumento nulo o vacío
-throw new IllegalArgumentException("Username no puede estar vacío");
+// HTTP 400 - Validacion basica de argumentos
+throw new IllegalArgumentException("Username no puede estar vacio");
 ```
 
----
+## Catalogo de excepciones
 
-## 📊 Tabla de Excepciones
+| Excepcion | HTTP | Uso recomendado | Ejemplo |
+|-----------|------|------------------|---------|
+| `ProductoInvalidoException` | 400 | Datos de producto invalidos | Precio negativo |
+| `ProductoNoEncontradoException` | 404 | Producto inexistente | `GET /productos/999` |
+| `ClienteExisteException` | 400 | Duplicado en registro | Username repetido |
+| `ClienteNoEncontradoException` | 404 | Cliente inexistente | `GET /clientes/999` |
+| `ClienteYaExisteException` | 409 | Conflicto de estado | Crear cliente con ID existente |
+| `InsufficientStockException` | 400 | Stock insuficiente | Comprar 100 con stock 50 |
+| `IllegalArgumentException` | 400 | Argumento invalido | Username vacio |
 
-| Excepción | HTTP | Cuándo usar | Ejemplo |
-|-----------|------|-----------|---------|
-| ProductoInvalidoException | 400 | Datos del producto inválidos | Precio negativo |
-| ProductoNoEncontradoException | 404 | Producto no existe | GET /productos/999 |
-| ClienteExisteException | 400 | Cliente duplicado en registro | Registrar username duplicado |
-| ClienteNoEncontradoException | 404 | Cliente no existe | GET /clientes/999 |
-| ClienteYaExisteException | 409 | Conflicto de estado | Crear cliente con ID existente |
-| InsufficientStockException | 400 | Stock insuficiente | Comprar 100 con 50 en stock |
-| IllegalArgumentException | 400 | Argumento inválido | Username vacío |
+## Formato estandar de error
 
----
-
-## 🎯 Respuestas de Error Estándar
-
-Todas las excepciones devuelven:
+La API debe responder con una estructura uniforme basada en `ApiError`:
 
 ```json
 {
-  "timestamp": "2026-03-17T19:23:13.254894+01:00",
   "status": 400,
-  "error": "Bad Request",
-  "message": "Descripción del error",
-  "path": "/api/endpoint"
+  "code": "VALIDATION_ERROR",
+  "message": "Descripcion del error",
+  "path": "/api/endpoint",
+  "timestamp": "2026-03-17 19:23:13"
 }
 ```
 
----
+## Checklist de calidad para Pull Requests
 
-## ✅ Checklist para Pull Requests
+- [ ] Se lanza una excepcion de dominio adecuada al caso.
+- [ ] El estado HTTP mapeado es coherente con el error.
+- [ ] El mensaje de error es accionable para cliente o integrador.
+- [ ] La excepcion esta registrada en `GlobalExceptionHandler`.
+- [ ] Existen pruebas para el flujo exitoso y de error.
 
-- [ ] ¿Lanzé una excepción apropiada?
-- [ ] ¿El código HTTP es correcto?
-- [ ] ¿El mensaje es claro para el cliente?
-- [ ] ¿Está la excepción en GlobalExceptionHandler?
-- [ ] ¿Pasaron los tests?
+## Referencias
 
----
+- `src/main/java/manuel/tienda/exception/GlobalExceptionHandler.java`
+- `src/main/java/manuel/tienda/exception/ApiError.java`
+- `src/main/java/manuel/tienda/exception/*.java`
 
-## 🔗 Referencias
+## Resolucion de incidencias frecuentes
 
-- **GlobalExceptionHandler:** `src/main/java/manuel/tienda/exception/GlobalExceptionHandler.java`
-- **ApiError:** `src/main/java/manuel/tienda/exception/ApiError.java`
-- **Excepciones:** `src/main/java/manuel/tienda/exception/*.java`
+### Se obtiene HTTP 500 cuando deberia ser 4xx
 
----
+La excepcion no esta siendo interceptada por `GlobalExceptionHandler` o se esta relanzando como `Exception` generica.
 
-## 🆘 Troubleshooting
+### Diferencia entre `ClienteExisteException` y `ClienteYaExisteException`
 
-**P: Veo error 500 en lugar de 400**
-R: Probablemente lanzaste una excepción sin handler. Verifica que esté en GlobalExceptionHandler.
+- `ClienteExisteException` (400): duplicado durante el alta.
+- `ClienteYaExisteException` (409): conflicto por estado actual del recurso.
 
-**P: ¿Cuál es la diferencia entre ClienteExisteException y ClienteYaExisteException?**
-R: 
-- `ClienteExisteException` (400): Duplicado al registrar
-- `ClienteYaExisteException` (409): Conflicto de estado
+### Alta de nuevas excepciones
 
-**P: ¿Puedo crear una excepción nueva?**
-R: Sí, pero debes:
-1. Crearla en el paquete `exception/`
-2. Heredar de `RuntimeException`
-3. Agregar un handler en `GlobalExceptionHandler`
+1. Crear la excepcion en `exception/` extendiendo `RuntimeException`.
+2. Registrar su handler en `GlobalExceptionHandler`.
+3. Definir o reutilizar un codigo de error estable.
+4. Cubrir el caso con pruebas de servicio y/o controlador.
 

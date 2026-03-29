@@ -1,193 +1,137 @@
-ADR-001 - Decisión: No usar @Data en entidades JPA
-Contexto
-Se eliminó el uso de Lombok @Data en entidades JPA.
+# Architecture Decisions (ADR)
 
-Motivo
-@Data genera automáticamente equals() y hashCode() usando todos los campos.
+## ADR-001: No usar `@Data` en entidades JPA
 
-En entidades JPA esto puede provocar:
+### Contexto
+Se elimino el uso de Lombok `@Data` en entidades JPA para evitar efectos no deseados sobre identidad y relaciones.
 
-Problemas con relaciones lazy.
+### Decision
+En entidades se usan `@Getter`, `@Setter`, `@NoArgsConstructor` y `@AllArgsConstructor` (cuando aplica).
+Los metodos `equals()` y `hashCode()` se implementan manualmente basados en `id`.
 
-Inconsistencias en colecciones Set.
+### Razon
+`@Data` genera `equals()` y `hashCode()` con todos los campos, lo que puede romper colecciones, relaciones `lazy` y proxies de Hibernate.
 
-Cambios de hashCode en campos mutables.
+### Consecuencias
+Mejor control de identidad y menor riesgo de errores de persistencia.
 
-Conflictos con proxies de Hibernate.
+## ADR-002: Estrategia de identidad en entidades JPA
 
-Decisión
-Se usarán únicamente:
+### Contexto
+Se requiere una politica uniforme de identidad para evitar inconsistencias en persistencia y colecciones.
 
-@Getter
+### Decision
+Todas las entidades usan `@Id` con `Long` autogenerado.
+`equals()` se basa en `id != null` y `hashCode()` en `getClass().hashCode()`.
 
-@Setter
+### Razon
+JPA gestiona identidad por clave primaria y esta estrategia es estable para entidades con ciclo de vida mutable.
 
-@NoArgsConstructor
+### Consecuencias
+Modelo consistente, compatible con proxies y seguro para evolucion futura.
 
-@AllArgsConstructor (cuando aplique)
+## ADR-003: Arquitectura por capas
 
-equals() y hashCode() serán implementados manualmente basados únicamente en el id.
+### Contexto
+Se necesita separar responsabilidades para mejorar mantenibilidad y testabilidad.
 
-ADR-002 - Estrategia de identidad en entidades JPA
-Contexto
-Las entidades inicialmente no tenían clave primaria explícita o
-no implementaban correctamente equals/hashCode.
+### Decision
+El proyecto adopta una arquitectura por capas:
 
-Decisión
-Todas las entidades JPA deben tener @Id.
+- Controller
+- Service
+- Repository
+- Entity/DTO/Mapper
 
-Se usa Long autogenerado como clave primaria.
+### Razon
+Reduce acoplamiento y favorece cambios localizados.
 
-equals() se basa únicamente en id != null.
+### Consecuencias
+Mayor claridad estructural y mejor cobertura de pruebas por capa.
 
-hashCode() es estable usando getClass().hashCode().
+## ADR-004: Uso de DTO en la API
 
-Razón
-JPA gestiona identidad por clave primaria.
+### Contexto
+Las entidades JPA no deben exponerse directamente como contrato HTTP.
 
-Evita problemas en colecciones Hash.
+### Decision
+La API usa DTO de entrada y salida (por ejemplo, `ClienteRequest` y `ClienteResponse`).
 
-Evita inconsistencias cuando id pasa de null a valor.
+### Razon
+Protege el modelo de persistencia y permite evolucionar la API sin acoplarla a la base de datos.
 
-Compatible con proxies de Hibernate.
+### Consecuencias
+Se introduce una capa explicita de transformacion.
 
-Consecuencias
-Identidad técnica separada de identidad de negocio.
+## ADR-005: Uso de mappers para conversion entidad/DTO
 
-Modelo consistente y seguro para crecimiento futuro.
+### Contexto
+La conversion manual repetida en controladores y servicios genera duplicacion.
 
-ADR-003 - Arquitectura por capas
-Contexto
--Se necesita una organización clara del códgigo para separar responsablidades
-del backend.
+### Decision
+La conversion se centraliza en clases mapper (`ClienteMapper`, `ProductoMapper`, `UsuarioMapper`).
 
-Decisión
-El proeycto sigue una arquuitectura por capas:
-Controller
-Service
-Repository
-Entity
+### Razon
+Evita duplicaciones y mantiene servicios/controladores enfocados en logica de negocio.
 
-Razón
-Separar responsabilidades permite:
-Código más mantenible.
-Facilitar el testing.
-Reducir el acoplamiento entre componentes.
+### Consecuencias
+Se agrega una capa adicional dedicada a transformaciones.
 
-ADR-004 - Uso de DTO para comunicación con la API
-Contexto
-Las entidades JPA representan el modelo de persistencia y no deben exponerse directamente en la API REST.
+## ADR-006: Manejo global de excepciones
 
-Decisión
-Se utilizan DTO para la comunicación entre la API y los clientes.
+### Contexto
+Sin una estrategia global, cada controlador deberia resolver errores localmente.
 
-Tipos utilizados: Request DTO y Response DTO.
+### Decision
+Se usa `@RestControllerAdvice` con `@ExceptionHandler` para centralizar el manejo de errores.
 
-Ejemplo: ClienteRequest, ClienteResponse.
+### Razon
+Permite respuestas coherentes y reduce codigo repetido.
 
-Razón
-Evitar exponer directamente las entidades JPA.
+### Consecuencias
+Todas las excepciones de dominio se gestionan en un unico punto.
 
-Controlar qué datos se envían al cliente.
+## ADR-007: Estructura de error estandar (`ApiError`)
 
-Separar el modelo de persistencia del contrato de la API.
+### Contexto
+Las respuestas de error deben ser estructuradas y estables para integraciones.
 
-Facilitar cambios en el modelo sin romper la API.
+### Decision
+La API devuelve errores usando `ApiError` con campos de contexto.
 
-Consecuencias
-Se introduce una capa adicional de transformación entre entidades y DTO.
+### Razon
+Mejora trazabilidad y consumo por frontend u otros clientes.
 
-ADR-005 - Uso de Mapper para transformar entidades y DTO
-Contexto
-La conversión entre entidades JPA y DTO puede generar código repetitivo si se realiza directamente en los servicios o controladores.
+### Consecuencias
+Los handlers convierten excepciones a una estructura uniforme.
 
-Decisión
-Se implementan clases Mapper para centralizar la transformación entre entidades y DTO.
+## ADR-008: Validacion en DTO con Jakarta Validation
 
-Ejemplo: ClienteMapper, ProductoMapper.
+### Contexto
+La validacion debe ocurrir antes de ejecutar logica de negocio.
 
-Razón
-Centralizar la lógica de transformación.
+### Decision
+Se usan anotaciones de validacion (`@NotNull`, `@NotBlank`, `@Size`, etc.) y `@Valid` en endpoints.
 
-Evitar duplicación de código.
+### Razon
+Reduce errores aguas abajo y mejora calidad de respuesta al cliente.
 
-Mantener los servicios y controladores más limpios.
+### Consecuencias
+Los fallos de validacion se gestionan por el manejador global de excepciones.
 
-Consecuencias
-Se añade una capa adicional encargada únicamente de las transformaciones de datos.
+## ADR-009: Estrategia de testing
 
-ADR-006 - Manejo global de excepciones
-Contexto
-Las excepciones pueden lanzarse desde diferentes capas. Sin una estrategia global, cada controlador debería gestionar sus errores manualmente.
+### Contexto
+Es necesario asegurar comportamiento de negocio y de endpoints.
 
-Decisión
-Se implementa un manejador global de excepciones usando @RestControllerAdvice y @ExceptionHandler.
+### Decision
+Se implementan dos niveles de pruebas:
 
-Este componente intercepta excepciones lanzadas en cualquier controller.
+- Servicio con Mockito.
+- Controlador con MockMvc.
 
-Razón
-Centralizar el manejo de errores.
+### Razon
+Permite validacion aislada de logica y verificacion de contratos HTTP.
 
-Evitar duplicación de código.
-
-Mantener respuestas de error consistentes en toda la API.
-
-Consecuencias
-Todas las excepciones del dominio se gestionan en una única clase central.
-
-ADR-007 - Uso de ApiError como estructura de error de la API
-Contexto
-Las respuestas de error de una API no deben devolverse como texto simple. Se necesita un formato estructurado.
-
-Decisión
-Se introduce una clase ApiError que representa la estructura de error devuelta por la API.
-
-Campos: status, error, message, path, timestamp.
-
-Razón
-Proporcionar información clara sobre el error.
-
-Facilitar la integración con clientes frontend.
-
-Mantener consistencia en las respuestas de error.
-
-Consecuencias
-Todas las excepciones manejadas por el GlobalExceptionHandler se transforman en un objeto ApiError.
-
-ADR-008 - Validación de datos mediante DTO
-Contexto
-Los datos recibidos en las peticiones HTTP deben validarse antes de ser procesados por la lógica de negocio.
-
-Decisión
-Se utilizan anotaciones de validación de Jakarta Validation en los DTO (@NotNull, @NotBlank, @Size, etc.).
-
-Las validaciones se activan mediante @Valid en los controladores.
-
-Razón
-Validar datos antes de llegar a la lógica de negocio.
-
-Reducir errores en capas inferiores.
-
-Proporcionar mensajes claros al cliente.
-
-Consecuencias
-Si una validación falla, Spring lanza una excepción gestionada por el GlobalExceptionHandler.
-
-ADR-009 - Estrategia de testing en la aplicación
-Contexto
-Es necesario verificar que la lógica de negocio y los endpoints de la API funcionan correctamente.
-
-Decisión
-Se implementan tests en dos niveles:
-Service tests usando Mockito.
-Controller tests usando MockMvc.
-
-Razón
-Validar la lógica de negocio de forma aislada.
-
-Simular dependencias externas mediante mocks.
-
-Verificar el comportamiento de los endpoints REST.
-
-Consecuencias
-El proyecto incluye una capa de testing que asegura la estabilidad del código ante futuros cambios.
+### Consecuencias
+Mayor estabilidad y deteccion temprana de regresiones.

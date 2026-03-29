@@ -3,10 +3,12 @@ package manuel.tienda.cliente.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import manuel.tienda.cliente.role.Role;
 
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
+@Setter
 @Table(name = "clientes")
 public class Cliente {
 
@@ -22,6 +24,9 @@ public class Cliente {
 
     @Column(nullable = false)
     private Boolean activo = true;
+
+    @Enumerated(EnumType.STRING)
+    private Role role;
 
     public Cliente(String username, String passwordHash) {
         if (username == null || username.isBlank()) {
