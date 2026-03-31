@@ -1,103 +1,80 @@
-# Guia de Excepciones - Tienda Online API
+# Guia de Excepciones
 
-## Objetivo
+## 1. Objetivo
 
-Este documento define las reglas para lanzar, mapear y mantener excepciones de dominio de forma consistente en toda la API.
+Definir una politica unica para lanzar, mapear y mantener excepciones de dominio con respuestas HTTP consistentes.
 
-## Criterios de uso
+## 2. Alcance
 
-### Producto no existe o datos invalidos
+Esta guia aplica a:
 
-```java
-// HTTP 404 - Producto no existe
-throw new ProductoNoEncontradoException(id);
+- Servicios de dominio (`cliente`, `producto`, `auth`, `Usuario`).
+- Capa web (controladores REST).
+- Manejo global (`GlobalExceptionHandler`).
 
-// HTTP 400 - Datos de entrada invalidos
-throw new ProductoInvalidoException("El precio debe ser mayor que cero");
-```
+## 3. Contrato de error
 
-### Cliente duplicado o no encontrado
-
-```java
-// HTTP 400 - Duplicado en registro
-throw new ClienteExisteException();
-
-// HTTP 404 - Recurso no encontrado
-throw new ClienteNoEncontradoException();
-
-// HTTP 409 - Conflicto de estado
-throw new ClienteYaExisteException("El cliente ya existe con este ID");
-```
-
-### Stock insuficiente
-
-```java
-// HTTP 400 - Regla de negocio incumplida
-throw new InsufficientStockException("Stock insuficiente para la compra");
-```
-
-### Argumentos invalidos
-
-```java
-// HTTP 400 - Validacion basica de argumentos
-throw new IllegalArgumentException("Username no puede estar vacio");
-```
-
-## Catalogo de excepciones
-
-| Excepcion | HTTP | Uso recomendado | Ejemplo |
-|-----------|------|------------------|---------|
-| `ProductoInvalidoException` | 400 | Datos de producto invalidos | Precio negativo |
-| `ProductoNoEncontradoException` | 404 | Producto inexistente | `GET /productos/999` |
-| `ClienteExisteException` | 400 | Duplicado en registro | Username repetido |
-| `ClienteNoEncontradoException` | 404 | Cliente inexistente | `GET /clientes/999` |
-| `ClienteYaExisteException` | 409 | Conflicto de estado | Crear cliente con ID existente |
-| `InsufficientStockException` | 400 | Stock insuficiente | Comprar 100 con stock 50 |
-| `IllegalArgumentException` | 400 | Argumento invalido | Username vacio |
-
-## Formato estandar de error
-
-La API debe responder con una estructura uniforme basada en `ApiError`:
+Todas las respuestas de error se serializan con `ApiError`:
 
 ```json
 {
+  "timestamp": "2026-03-31 09:00:00",
   "status": 400,
   "code": "VALIDATION_ERROR",
-  "message": "Descripcion del error",
-  "path": "/api/endpoint",
-  "timestamp": "2026-03-17 19:23:13"
+  "message": "username: no puede estar vacio",
+  "path": "/clientes"
 }
 ```
 
-## Checklist de calidad para Pull Requests
+Campos obligatorios:
 
-- [ ] Se lanza una excepcion de dominio adecuada al caso.
-- [ ] El estado HTTP mapeado es coherente con el error.
-- [ ] El mensaje de error es accionable para cliente o integrador.
-- [ ] La excepcion esta registrada en `GlobalExceptionHandler`.
-- [ ] Existen pruebas para el flujo exitoso y de error.
+- `timestamp`: fecha/hora del error.
+- `status`: codigo HTTP numerico.
+- `code`: identificador estable para integracion.
+- `message`: descripcion legible del problema.
+- `path`: endpoint solicitado.
 
-## Referencias
+## 4. Taxonomia y mapeo HTTP
 
-- `src/main/java/manuel/tienda/exception/GlobalExceptionHandler.java`
+| Excepcion | HTTP | Codigo interno | Uso esperado |
+|-----------|------|----------------|--------------|
+| `ProductoNoEncontradoException` | 404 | `RESOURCE_NOT_FOUND` | Recurso de producto inexistente |
+| `ClienteNoEncontradoException` | 404 | `RESOURCE_NOT_FOUND` | Recurso de cliente/usuario inexistente |
+| `ProductoInvalidoException` | 400 | `BAD_REQUEST` | Regla de negocio invalida en producto |
+| `InsufficientStockException` | 400 | `BAD_REQUEST` | Operacion no valida por stock |
+| `MethodArgumentNotValidException` | 400 | `VALIDATION_ERROR` | Error de validacion DTO (`@Valid`) |
+| `IllegalArgumentException` | 400 | `INVALID_ARGUMENT` | Argumento invalido en servicio/controlador |
+| `HttpMessageNotReadableException` | 400 | `MALFORMED_JSON` | Body JSON mal formado |
+| `ClienteExisteException` | 409 | `RESOURCE_CONFLICT` | Duplicado de recurso |
+| `ClienteYaExisteException` | 409 | `RESOURCE_CONFLICT` | Conflicto de estado |
+| `BadCredentialsException` | 401 | `AUTH_INVALID_CREDENTIALS` | Credenciales invalidas en login |
+| `Exception` | 500 | `INTERNAL_ERROR` | Error no clasificado |
+
+## 5. Reglas de implementacion
+
+1. Lanzar excepciones especificas de dominio desde `service`.
+2. No construir respuestas HTTP de error en servicios.
+3. Centralizar el mapeo HTTP en `GlobalExceptionHandler`.
+4. Mantener codigos `code` estables entre versiones.
+5. Evitar mensajes tecnicos internos en errores 4xx/5xx.
+
+## 6. Proceso para nuevas excepciones
+
+1. Crear clase en `src/main/java/manuel/tienda/exception/`.
+2. Registrar `@ExceptionHandler` correspondiente.
+3. Definir codigo de error estable y semantico.
+4. Agregar pruebas del flujo de error.
+5. Actualizar esta guia y `docs/api-reference.md` si aplica.
+
+## 7. Control de calidad
+
+- Cada endpoint debe documentar errores de negocio esperados.
+- Toda validacion de DTO debe reflejarse como `VALIDATION_ERROR`.
+- Los errores 500 deben registrarse en log con stacktrace.
+
+## 8. Referencias de codigo
+
 - `src/main/java/manuel/tienda/exception/ApiError.java`
-- `src/main/java/manuel/tienda/exception/*.java`
-
-## Resolucion de incidencias frecuentes
-
-### Se obtiene HTTP 500 cuando deberia ser 4xx
-
-La excepcion no esta siendo interceptada por `GlobalExceptionHandler` o se esta relanzando como `Exception` generica.
-
-### Diferencia entre `ClienteExisteException` y `ClienteYaExisteException`
-
-- `ClienteExisteException` (400): duplicado durante el alta.
-- `ClienteYaExisteException` (409): conflicto por estado actual del recurso.
-
-### Alta de nuevas excepciones
-
-1. Crear la excepcion en `exception/` extendiendo `RuntimeException`.
-2. Registrar su handler en `GlobalExceptionHandler`.
-3. Definir o reutilizar un codigo de error estable.
-4. Cubrir el caso con pruebas de servicio y/o controlador.
+- `src/main/java/manuel/tienda/exception/GlobalExceptionHandler.java`
+- `src/main/java/manuel/tienda/exception/`
 

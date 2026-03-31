@@ -28,22 +28,45 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 
         http
+                // ❌ Desactivar cosas que no usamos
                 .csrf(AbstractHttpConfigurer::disable)
                 .httpBasic(AbstractHttpConfigurer::disable)
                 .formLogin(AbstractHttpConfigurer::disable)
                 .logout(AbstractHttpConfigurer::disable)
+
+                // 🔐 Stateless (JWT)
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
+
+                // ❗ Manejo de errores (401)
                 .exceptionHandling(ex ->
                         ex.authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED))
                 )
+
+                // 🔥 AUTORIZACIÓN
                 .authorizeHttpRequests(auth -> auth
+
+                        // 🔥 SWAGGER COMPLETO LIBRE
+                        .requestMatchers(
+                                "/swagger-ui/**",
+                                "/v3/api-docs/**",
+                                "/swagger-ui.html",
+                                "/swagger-resources/**",
+                                "/webjars/**"
+                        ).permitAll()
+
+                        // 🔓 LOGIN / REGISTER
                         .requestMatchers("/auth/**").permitAll()
-                        .requestMatchers(HttpMethod.POST,"/clientes").permitAll()
+
+                        // 👇 TU CASO
+                        .requestMatchers(HttpMethod.POST, "/clientes").permitAll()
+
+                        // 🔐 TODO LO DEMÁS
                         .anyRequest().authenticated()
                 );
 
+        // 🔥 FILTRO JWT
         http.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
