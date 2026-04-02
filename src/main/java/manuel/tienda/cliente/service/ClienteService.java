@@ -9,11 +9,14 @@ import manuel.tienda.cliente.repository.ClienteRepository;
 import manuel.tienda.cliente.role.Role;
 import manuel.tienda.exception.ClienteExisteException;
 import manuel.tienda.exception.ClienteNoEncontradoException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
 
 /**
  * Servicio para gestionar operaciones relacionadas con clientes en el sistema de tienda online.
@@ -29,6 +32,7 @@ public class ClienteService {
 
     private final ClienteRepository clienteRepository;
     private final PasswordEncoder passwordEncoder;
+    private static final Logger log = LoggerFactory.getLogger(ClienteService.class);
 
     /**
      * Constructor para inyección de dependencias.
@@ -51,13 +55,18 @@ public class ClienteService {
      */
     @Transactional()
     public ClienteResponse registrar(ClienteRequest clienteRequest) {
+        log.info("Intentando registrar cliente con username: {}", clienteRequest.getUsername());
         if (clienteRepository.existsByUsername(clienteRequest.getUsername())) {
+
+            log.warn("Registro fallido: El username '{}' ya está en uso", clienteRequest.getUsername());
             throw new ClienteExisteException();
         }
 
         Cliente c = new Cliente(clienteRequest.getUsername(), passwordEncoder.encode(clienteRequest.getPassword()));
         c.setRole(Role.USER);
         clienteRepository.save(c);
+
+        log.info("Cliente registrado exitosamente con ID: {} y username: {}", c.getId(), c.getUsername());
 
         return new ClienteResponse(c.getId(), c.getUsername(), c.getActivo());
     }
@@ -74,6 +83,8 @@ public class ClienteService {
     @Transactional(readOnly = true)
     public Page<ClienteResponse> findAll(String username, Pageable pageable) {
 
+        log.info("Buscando clientes con filtro username: '{}', page: {}, size: {}",
+                username, pageable.getPageNumber(), pageable.getPageSize());
         if (username != null && !username.isEmpty()) {
             // Filtro solo por username
             return clienteRepository.findByUsernameContaining(username, pageable)
@@ -81,6 +92,8 @@ public class ClienteService {
 
         } else {
             // Sin filtros
+            log.debug("No se proporcionó filtro de username, buscando todos los clientes");
+
             return clienteRepository.findAll(pageable)
                     .map(ClienteMapper::toResponse);
         }
@@ -94,7 +107,16 @@ public class ClienteService {
      * @throws ClienteNoEncontradoException Si no se encuentra un cliente con el ID proporcionado.
      */
     public ClienteResponse findById(Long id) {
-        Cliente cliente = clienteRepository.findById(id).orElseThrow(ClienteNoEncontradoException::new);
+
+        log.info("Buscando cliente con ID: {}", id);
+
+        Cliente cliente = clienteRepository.findById(id)
+                .orElseThrow(() -> {
+                    log.warn("Cliente no encontrado con id: {}", id);
+                    return new ClienteNoEncontradoException();
+                });
+
+        log.info("Cliente encontrado: ID: {}, Username: {}", cliente.getId(), cliente.getUsername());
 
         return ClienteMapper.toResponse(cliente);
     }
@@ -107,8 +129,17 @@ public class ClienteService {
      * @throws ClienteNoEncontradoException Si no se encuentra un cliente con el username proporcionado.
      */
     public ClienteResponse findUserByUsername(String username) {
+
+        log.info("Buscando cliente con username: '{}'", username);
+
         Cliente cliente = clienteRepository.findByUsername(username)
-                .orElseThrow(ClienteNoEncontradoException::new);
+                .orElseThrow((() -> {
+
+                    log.warn("Cliente no encontrado con username: '{}'", username);
+                    return new ClienteNoEncontradoException();
+                }));
+
+        log.info("Cliente encontrado con username: '{}'", cliente.getUsername());
 
         return ClienteMapper.toResponse(cliente);
     }
@@ -125,31 +156,46 @@ public class ClienteService {
      */
     @Transactional
     public ClienteResponse update(Long id, ClienteRequest clienteRequest) {
+
+        log.info("Intentando actualizar cliente con ID: {}", id);
         Cliente cliente = clienteRepository.findById(id).orElseThrow(ClienteNoEncontradoException::new);
 
         // Actualizar username
         if (clienteRequest.getUsername() != null && !clienteRequest.getUsername().isBlank()) {
+
+            log.info("Actualizando username para cliente ID: {}, nuevo username: '{}'", id, clienteRequest.getUsername());
             String nuevoUsername = clienteRequest.getUsername();
 
             if (!cliente.getUsername().equals(nuevoUsername)) {
+                log.debug("El nuevo username '{}' es diferente al actual para cliente ID: {}", nuevoUsername, id);
                 boolean existe = clienteRepository.existsByUsername(nuevoUsername);
 
                 if (existe) {
+
+                    log.warn("Actualización fallida: El username '{}' ya está en uso por otro cliente", nuevoUsername);
+
                     throw new ClienteExisteException();
                 }
-
+                log.info("Username actualizado exitosamente para cliente ID: {}, nuevo username: '{}'", id, nuevoUsername);
                 cliente.updateUsername(nuevoUsername);
             }
         }
 
         // Actualizar password
+        log.debug("Verificando si se debe actualizar la contraseña para cliente ID: {}", id);
+
         if (clienteRequest.getPassword() != null && !clienteRequest.getPassword().isBlank()) {
+
+            log.info("Actualizando contraseña para cliente ID: {}", id);
+
             String passwordEncriptado = passwordEncoder.encode(clienteRequest.getPassword());
             cliente.updatePasswordHash(passwordEncriptado);
+
+            log.info("Contraseña actualizada exitosamente para cliente ID: {}", id);
         }
 
         clienteRepository.save(cliente);
-
+        log.info("Cliente actualizado exitosamente: ID: {}, Username: {}", cliente.getId(), cliente.getUsername());
         return ClienteMapper.toResponse(cliente);
     }
 
@@ -161,9 +207,16 @@ public class ClienteService {
      */
     @Transactional
     public void delete(Long id) {
-        Cliente clienteEncontrado = clienteRepository.findById(id).orElseThrow(ClienteNoEncontradoException::new);
+        log.info("Intentando eliminar cliente con ID: {}", id);
+        Cliente clienteEncontrado = clienteRepository.findById(id).orElseThrow(
+                () -> {
+                    log.warn("Cliente no encontrado con id: {}", id);
+
+                    return new ClienteNoEncontradoException();
+                });
 
         clienteRepository.delete(clienteEncontrado);
+        log.info("Cliente eliminado exitosamente con ID: {}", id);
     }
 
     /**
@@ -176,11 +229,21 @@ public class ClienteService {
      */
     @Transactional
     public ClienteResponse cambiarEstado(Long id, Boolean activo) {
-        Cliente cliente = clienteRepository.findById(id).orElseThrow(ClienteNoEncontradoException::new);
+
+        log.info("Cambiando estado activo para cliente ID: {}, nuevo estado: {}", id, activo);
+
+        Cliente cliente = clienteRepository.findById(id).orElseThrow(() -> {
+
+            log.warn("Cliente no encontrado con id: {}", id);
+
+            return new ClienteNoEncontradoException();
+        });
 
         cliente.updateActivo(activo);
 
         clienteRepository.save(cliente);
+
+        log.info("Estado del cliente ID: {} actualizado a: {}", id, activo);
 
         return ClienteMapper.toResponse(cliente);
     }
