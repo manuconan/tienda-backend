@@ -19,13 +19,24 @@ import org.springframework.transaction.annotation.Transactional;
 
 
 /**
- * Servicio para gestionar operaciones relacionadas con clientes en el sistema de tienda online.
- * Proporciona funcionalidades CRUD (Crear, Leer, Actualizar, Eliminar) para entidades de Cliente,
- * incluyendo autenticación y validaciones de negocio.
+ * Servicio de negocio para la gestión de clientes en el sistema de tienda online.
+ *
+ * <p>Proporciona las operaciones CRUD completas sobre la entidad {@link Cliente}:
+ * registro, consulta individual, listado paginado con filtros dinámicos,
+ * actualización, cambio de estado activo y eliminación.</p>
+ *
+ * <p>El método {@link #findAll(String, Boolean, Pageable)} admite cuatro combinaciones
+ * de filtros (sin filtros, solo username, solo activo, ambos) apoyándose en los
+ * métodos de consulta declarados en {@link manuel.tienda.cliente.repository.ClienteRepository}.</p>
+ *
+ * <p>Las contraseñas se almacenan siempre codificadas con BCrypt mediante
+ * {@link org.springframework.security.crypto.password.PasswordEncoder}.</p>
  *
  * @author Manuel
- * @version 1.0
+ * @version 1.1
  * @since 2023
+ * @see manuel.tienda.cliente.repository.ClienteRepository
+ * @see manuel.tienda.cliente.controller.ClienteController
  */
 @Service
 public class ClienteService {
@@ -72,28 +83,50 @@ public class ClienteService {
     }
 
     /**
-     * Encuentra todos los clientes con soporte para paginación y filtrado opcional por username y estado activo.
-     * Si se proporciona un username, filtra clientes que contengan ese texto en el username.
-     * Si se proporciona un estado activo, filtra clientes por ese estado.
+     * Encuentra todos los clientes con soporte para paginación y filtrado opcional por username
+     * y/o estado activo. Cubre los 4 casos posibles de combinación de filtros:
+     * <ul>
+     *   <li>Sin filtros       - devuelve todos los clientes.</li>
+     *   <li>Solo username     - filtra por username parcial.</li>
+     *   <li>Solo activo       - filtra por estado activo.</li>
+     *   <li>Username + activo - filtra por ambos criterios.</li>
+     * </ul>
      *
-     * @param username Filtro opcional para buscar clientes por username (puede ser null o vacío).
+     * @param username Filtro parcial por nombre de usuario (puede ser null o vacío).
+     * @param activo   Filtro por estado activo del cliente (puede ser null).
      * @param pageable Información de paginación y ordenación.
      * @return Página de ClienteResponse con los clientes encontrados.
      */
     @Transactional(readOnly = true)
-    public Page<ClienteResponse> findAll(String username, Pageable pageable) {
+    public Page<ClienteResponse> findAll(String username, Boolean activo, Pageable pageable) {
 
-        log.info("Buscando clientes con filtro username: '{}', page: {}, size: {}",
-                username, pageable.getPageNumber(), pageable.getPageSize());
-        if (username != null && !username.isEmpty()) {
-            // Filtro solo por username
+        boolean tieneUsername = username != null && !username.isEmpty();
+        boolean tieneActivo   = activo != null;
+
+        log.info("Buscando clientes — username: '{}', activo: {}, page: {}, size: {}",
+                username, activo, pageable.getPageNumber(), pageable.getPageSize());
+
+        if (tieneUsername && tieneActivo) {
+            // Caso 1: filtro por username Y activo
+            log.debug("Aplicando filtro combinado: username='{}' y activo={}", username, activo);
+            return clienteRepository.findByUsernameContainingAndActivo(username, activo, pageable)
+                    .map(ClienteMapper::toResponse);
+
+        } else if (tieneUsername) {
+            // Caso 2: filtro solo por username
+            log.debug("Aplicando filtro solo por username: '{}'", username);
             return clienteRepository.findByUsernameContaining(username, pageable)
                     .map(ClienteMapper::toResponse);
 
-        } else {
-            // Sin filtros
-            log.debug("No se proporcionó filtro de username, buscando todos los clientes");
+        } else if (tieneActivo) {
+            // Caso 3: filtro solo por activo
+            log.debug("Aplicando filtro solo por activo: {}", activo);
+            return clienteRepository.findByActivo(activo, pageable)
+                    .map(ClienteMapper::toResponse);
 
+        } else {
+            // Caso 4: sin filtros, devuelve todos
+            log.debug("Sin filtros aplicados, devolviendo todos los clientes");
             return clienteRepository.findAll(pageable)
                     .map(ClienteMapper::toResponse);
         }
@@ -148,7 +181,7 @@ public class ClienteService {
      * Actualiza los datos de un cliente existente.
      * Permite actualizar username (si no está en uso) y/o contraseña.
      *
-     * @param id             ID del cliente a actualizar.
+     * @param id ID del cliente a actualizar.
      * @param clienteRequest Datos a actualizar (username y/o password).
      * @return ClienteResponse con los datos actualizados del cliente.
      * @throws ClienteNoEncontradoException Si no se encuentra el cliente con el ID proporcionado.
